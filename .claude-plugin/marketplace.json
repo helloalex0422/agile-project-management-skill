@@ -1,0 +1,13 @@
+{
+  "name": "alex-agile-tools",
+  "owner": {
+    "name": "Alex"
+  },
+  "plugins": [
+    {
+      "name": "agile-project-management",
+      "source": ".",
+      "description": "敏捷项目管理工具集：每日站会、Sprint规划、Backlog管理、Sprint回顾、发布管理，支持 Notion 看板 + GitLab 集成"
+    }
+  ]
+}
