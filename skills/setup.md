@@ -66,11 +66,106 @@
 }
 ```
 
-**路径 B：若路径 A 不支持内网，自建轻量 MCP**
+**路径 B：自建轻量 GitLab MCP（内网兼容性问题时使用）**
 
-告知用户："社区版 gitlab-mcp 需要验证是否兼容您的内网 GitLab 版本。若连接失败，可在 project-manage 目录下创建一个自建 MCP server（Python FastMCP），运行 `project-manage:setup` 时会提示并提供脚手架。"
+若路径 A 连接失败，使用 Python FastMCP 自建：
 
-验证：调用 GitLab MCP 列出可访问的项目（`list_projects`），确认连接成功。
+1. 安装依赖：`pip install fastmcp httpx`
+
+2. 在 `project-manage/` 下创建 `gitlab-mcp-server.py`：
+
+```python
+import httpx
+from fastmcp import FastMCP
+
+mcp = FastMCP("gitlab-mcp")
+GITLAB_URL = ""  # 运行时从环境变量读取
+GITLAB_TOKEN = ""
+
+@mcp.tool()
+def list_projects() -> list:
+    """列出可访问的 GitLab 项目"""
+    headers = {"PRIVATE-TOKEN": GITLAB_TOKEN}
+    resp = httpx.get(f"{GITLAB_URL}/api/v4/projects", headers=headers)
+    return resp.json()
+
+@mcp.tool()
+def list_issues(project_path: str, state: str = "opened") -> list:
+    """列出项目 issues"""
+    headers = {"PRIVATE-TOKEN": GITLAB_TOKEN}
+    encoded = project_path.replace("/", "%2F")
+    resp = httpx.get(f"{GITLAB_URL}/api/v4/projects/{encoded}/issues?state={state}", headers=headers)
+    return resp.json()
+
+@mcp.tool()
+def create_issue(project_path: str, title: str, description: str = "") -> dict:
+    """创建 issue"""
+    headers = {"PRIVATE-TOKEN": GITLAB_TOKEN}
+    encoded = project_path.replace("/", "%2F")
+    data = {"title": title, "description": description}
+    resp = httpx.post(f"{GITLAB_URL}/api/v4/projects/{encoded}/issues", headers=headers, json=data)
+    return resp.json()
+
+@mcp.tool()
+def update_issue(project_path: str, issue_id: int, state_event: str = "") -> dict:
+    """更新 issue（state_event: close/reopen）"""
+    headers = {"PRIVATE-TOKEN": GITLAB_TOKEN}
+    encoded = project_path.replace("/", "%2F")
+    data = {}
+    if state_event:
+        data["state_event"] = state_event
+    resp = httpx.put(f"{GITLAB_URL}/api/v4/projects/{encoded}/issues/{issue_id}", headers=headers, json=data)
+    return resp.json()
+
+@mcp.tool()
+def list_milestones(project_path: str) -> list:
+    """列出项目 milestones"""
+    headers = {"PRIVATE-TOKEN": GITLAB_TOKEN}
+    encoded = project_path.replace("/", "%2F")
+    resp = httpx.get(f"{GITLAB_URL}/api/v4/projects/{encoded}/milestones", headers=headers)
+    return resp.json()
+
+@mcp.tool()
+def create_tag(project_path: str, tag_name: str, ref: str) -> dict:
+    """创建 tag"""
+    headers = {"PRIVATE-TOKEN": GITLAB_TOKEN}
+    encoded = project_path.replace("/", "%2F")
+    data = {"tag_name": tag_name, "ref": ref}
+    resp = httpx.post(f"{GITLAB_URL}/api/v4/projects/{encoded}/repository/tags", headers=headers, json=data)
+    return resp.json()
+
+@mcp.tool()
+def create_note(project_path: str, issue_id: int, body: str) -> dict:
+    """在 issue 上添加评论"""
+    headers = {"PRIVATE-TOKEN": GITLAB_TOKEN}
+    encoded = project_path.replace("/", "%2F")
+    data = {"body": body}
+    resp = httpx.post(f"{GITLAB_URL}/api/v4/projects/{encoded}/issues/{issue_id}/notes", headers=headers, json=data)
+    return resp.json()
+
+if __name__ == "__main__":
+    import os
+    GITLAB_URL = os.environ["GITLAB_URL"]
+    GITLAB_TOKEN = os.environ["GITLAB_TOKEN"]
+    mcp.run()
+```
+
+3. 在 `~/.claude/settings.json` 的 `mcpServers` 中添加：
+
+```json
+{
+  "gitlab": {
+    "command": "python3",
+    "args": ["/Users/alex/Workspace/ai-agent/project-manage/gitlab-mcp-server.py"],
+    "env": {
+      "GITLAB_URL": "http://gitlab.internal",
+      "GITLAB_TOKEN": "<your-personal-access-token>"
+    }
+  }
+}
+```
+
+4. 重启 Claude Code，验证：调用 `list_projects` 工具确认连接成功
 
 ---
 
