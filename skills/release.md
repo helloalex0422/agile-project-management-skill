@@ -116,7 +116,7 @@ Tag：v1.0.0 @ main
 
 2. 在 Notion 中，调用 `query_database` 查找与此 GitLab 项目关联（`gitlab_issue` URL 包含该项目路径）且 Status ≠ "Done" 的任务，逐一调用 `update_page` 更新 Status = "Done"
 
-3. 调用 Notion MCP 更新 Dashboard Page，在"最近站会记录"模块追加一条发布记录：`YYYY-MM-DD: 🚀 发布 v1.0.0（group/repo）`
+3. 调用 Notion MCP 更新 Dashboard Page（参照 `adapters/notion.md` 的 `update_dashboard` 实现），在 `recent_standups` 列表最前插入今日发布记录：`YYYY-MM-DD: 🚀 发布 v1.0.0（group/repo）`，超出3条则丢弃最旧的。
 
 输出：
 ```
