@@ -69,6 +69,7 @@ cat ~/.claude/standup-state.json
 - 选 1：更新 Status = "Done"
 - 选 2：若用户有补充说明，追加到 Notes（原内容 + "\n" + 今日日期 + ": " + 说明）
 - 选 3：更新 Priority = "P0"，追加到 Notes（原内容 + "\n" + 今日日期 + ": [blocker] " + 原因）
+- 选 4：不调用任何 Notion 工具，直接跳过此任务，继续处理下一个
 
 ### Step 4：今日计划
 
@@ -96,13 +97,13 @@ cat ~/.claude/standup-state.json
 
 对 type = "工作项目" 且有 GitLab Issue 链接的 Blocker 任务，询问：是否需要在 GitLab issue 上添加评论说明阻塞情况？
 
-若用户确认，从 `gitlab_issue` URL 中提取 issue ID（URL 最后一段数字），调用 GitLab MCP 的 `create_note` 工具添加评论。
+若用户确认，从 `gitlab_issue` URL 中提取 issue ID（URL 最后一段数字）和项目路径（URL 中 `/-/issues/` 前的 `group/repo` 部分），调用 GitLab MCP 的 `create_note` 工具添加评论。
 
 ### Step 6：GitLab 状态同步
 
 对本次站会中状态发生变更的工作项目任务（type = "工作项目" 且有 gitlab_issue 链接）：
 - 任务移至 Done → 调用 GitLab MCP `update_issue`，设置 `state_event = "close"`
-- 任务从 Sprint Todo 移至 In Progress → 调用 GitLab MCP `update_issue`，设置 `state_event = "reopen"`
+- 任务从 Sprint Todo 移至 In Progress → 调用 GitLab MCP `update_issue`，设置 `state_event = "reopen"`（注意：仅当该 issue 当前为 closed 状态时才调用 reopen；若 issue 已是 opened 状态则跳过此同步步骤）
 
 从 `gitlab_issue` URL 中提取 issue ID（取 URL 路径最后一段数字），以及项目路径（URL 中 `/issues/` 前的 `group/repo` 部分）。
 
