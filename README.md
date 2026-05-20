@@ -53,11 +53,9 @@ Claude Code Plugin，提供敏捷项目管理能力。作为独立 Scrum Master 
 每个任务卡片包含以下信息：
 
 - 标题
-- 优先级（High / Medium / Low）
+- 优先级（P0 / P1 / P2）
 - 估点（1-13）
-- 所有者
 - GitLab issue 链接（工作项目）
-- 标签（特性 / Bug / 技术债）
 
 ## 依赖
 
