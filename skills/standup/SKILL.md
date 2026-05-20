@@ -1,4 +1,9 @@
-# project-manage:standup
+---
+name: standup
+description: "每日站会。用户说"站会"、"standup"、"今天做什么"、"昨天做了什么"时触发。支持混合模式：自动检测 Notion 已更新的任务，仅对未处理任务对话引导。每日定时 10:00 自动触发，已完成则跳过。"
+---
+
+# agile-project-management:standup
 
 每日站会。支持混合模式：Claude 读取 Notion 实时状态，用户已自行更新的任务直接采纳，仅对未处理任务进行对话引导。
 

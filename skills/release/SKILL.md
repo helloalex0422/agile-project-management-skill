@@ -1,4 +1,9 @@
-# project-manage:release
+---
+name: release
+description: "发布管理。用户说"发布"、"release"、"打 tag"时触发。检查 GitLab milestone 进度、生成发布 checklist、确认后创建 GitLab tag 并更新 Notion 状态。"
+---
+
+# agile-project-management:release
 
 发布管理。检查 GitLab milestone 进度，生成发布 checklist，确认后打 tag。
 

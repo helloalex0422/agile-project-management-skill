@@ -1,4 +1,9 @@
-# project-manage:backlog
+---
+name: backlog
+description: "Backlog 管理。用户说"添加任务"、"新任务"、"看看 backlog"、"调整优先级"时触发。支持新增任务（含 GitLab issue 同步）、查看和排序 Backlog。"
+---
+
+# agile-project-management:backlog
 
 Backlog 管理。用于新增任务、查看和调整优先级、工作项目同步 GitLab issue。
 

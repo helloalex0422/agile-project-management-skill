@@ -1,4 +1,9 @@
-# project-manage:setup
+---
+name: setup
+description: "首次配置向导。初始化敏捷项目管理环境：安装 Notion MCP、配置 GitLab MCP、创建 Notion 看板数据库和 Dashboard、设置每日站会定时任务。首次使用时运行。"
+---
+
+# agile-project-management:setup
 
 初次配置引导。运行此 skill 以完成：
 1. Notion MCP 安装与配置
@@ -227,7 +232,7 @@ BOARD_BACKEND=notion
 ```
 CronCreate({
   cron: "0 10 * * *",
-  prompt: "project-manage:standup",
+  prompt: "agile-project-management:standup",
   durable: true,
   recurring: true
 })
@@ -251,7 +256,7 @@ Setup 完成后，输出配置摘要：
 - 每日站会：每天 10:00 自动触发
 
 开始使用：
-- 添加任务：project-manage:backlog
-- 规划Sprint：project-manage:sprint
-- 每日站会：project-manage:standup
+- 添加任务：agile-project-management:backlog
+- 规划Sprint：agile-project-management:sprint
+- 每日站会：agile-project-management:standup
 ```

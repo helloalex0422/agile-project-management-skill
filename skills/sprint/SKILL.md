@@ -1,4 +1,9 @@
-# project-manage:sprint
+---
+name: sprint
+description: "Sprint 规划。用户说"新 Sprint"、"规划 Sprint"、"Sprint planning"时触发。创建新 Sprint、从 Backlog 选取任务、检查 GitLab 关联、设定 Sprint 目标。"
+---
+
+# agile-project-management:sprint
 
 Sprint 规划。在每个 Sprint 开始时运行，完成 Sprint 创建、任务分配和 GitLab 关联。
 

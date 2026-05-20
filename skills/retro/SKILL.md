@@ -1,4 +1,9 @@
-# project-manage:retro
+---
+name: retro
+description: "Sprint 回顾。用户说"回顾"、"retro"、"复盘"时触发。统计 Sprint 完成率、引导复盘三问、生成回顾文档、归档 Sprint 任务。"
+---
+
+# agile-project-management:retro
 
 Sprint 回顾。在 Sprint 结束时运行，统计完成情况、记录复盘总结、归档任务。
 
@@ -113,5 +118,5 @@ Page 内容结构：
 - 回顾文档：<Notion Page 链接>
 - Sprint-01 已归档（或：跳过归档）
 
-下一步：运行 project-manage:sprint 开始规划下一个 Sprint。
+下一步：运行 agile-project-management:sprint 开始规划下一个 Sprint。
 ```
