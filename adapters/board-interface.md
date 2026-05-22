@@ -41,7 +41,7 @@
 - `project`: 所属项目名
 
 **fields 可选：**
-- `sprint`, `priority`, `estimate`, `description`, `gitlab_issue`, `gitlab_mr`, `due_date`, `notes`
+- `sprint`, `priority`, `estimate`, `description`, `gitlab_issue`, `due_date`, `notes`
 
 **返回：** 创建的任务对象（含 `id`）。
 
@@ -183,7 +183,6 @@
   "estimate": 4,
   "description": "任务详细描述",
   "gitlab_issue": "http://gitlab.internal/group/repo/-/issues/42",
-  "gitlab_mr": "http://gitlab.internal/group/repo/-/merge_requests/15",
   "due_date": "2026-05-25",
   "notes": "站会备注"
 }

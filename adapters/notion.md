@@ -1,23 +1,43 @@
 # Notion 适配器实现指引
 
-本文件描述如何使用 Notion MCP 实现 `board-interface.md` 中定义的抽象操作。
+本文件描述如何使用 `notion-tool`（`tools/notion_tool.py`）实现 `board-interface.md` 中定义的抽象操作。
 
 ## 前提条件
 
-- 已配置 Notion MCP（`project-manage:setup` 完成）
-- 已获得 Notion Integration Token
+- 已获得 Notion Integration Token（`agile-project-management:setup` 完成）
+- Token 已保存至 `~/.claude/agile-pm/config.json` 的 `notion.api_key`，或设置了环境变量 `NOTION_API_KEY`
 - 已创建 Task Database（Database ID 保存在配置中）
 - 已创建 Dashboard Page（Page ID 保存在配置中）
 
+## notion-tool 调用方式
+
+所有 Notion 操作通过 Bash 调用 `tools/notion_tool.py` 完成：
+
+```bash
+uv run tools/notion_tool.py <command> '<json_args>'
+```
+
+工具输出 JSON 到 stdout，错误输出到 stderr。exit code 非 0 表示失败。
+
+> **注意**：`tools/notion_tool.py` 的路径相对于插件根目录 `agile-project-management-skill/`。执行时使用完整路径或确保工作目录正确。
+
 ## 配置参数
 
-运行 `project-manage:setup` 后，以下配置会被记录：
+运行 `agile-project-management:setup` 后，以下配置保存在 `~/.claude/agile-pm/config.json`：
 
+```json
+{
+  "board_backend": "notion",
+  "notion": {
+    "api_key": "<Notion Integration Token>",
+    "task_db_id": "<Task Database 的 ID>",
+    "dashboard_page_id": "<Dashboard Page 的 ID>",
+    "parent_page_id": "<Parent Page 的 ID>"
+  }
+}
 ```
-NOTION_TASK_DB_ID=<Task Database 的 ID>
-NOTION_DASHBOARD_PAGE_ID=<Dashboard Page 的 ID>
-BOARD_BACKEND=notion
-```
+
+所有 skill 在执行前先读取此文件，获取 `notion.task_db_id`（下文简称 `NOTION_TASK_DB_ID`）和 `notion.dashboard_page_id`（下文简称 `NOTION_DASHBOARD_PAGE_ID`）。
 
 ---
 
@@ -25,9 +45,14 @@ BOARD_BACKEND=notion
 
 ### list_tasks(filter)
 
-调用 Notion MCP 的 `query_database` 工具：
-- `database_id`: `NOTION_TASK_DB_ID`
-- `filter`: 将抽象 filter 转换为 Notion filter 格式
+调用 notion-tool 的 `query-database` 命令：
+
+```bash
+uv run tools/notion_tool.py query-database '{
+  "database_id": "NOTION_TASK_DB_ID",
+  "filter": <Notion filter 格式>
+}'
+```
 
 **Notion filter 转换示例：**
 ```json
@@ -52,9 +77,14 @@ BOARD_BACKEND=notion
 
 ### create_task(fields)
 
-调用 Notion MCP 的 `create_page` 工具：
-- `parent`: `{ "database_id": "NOTION_TASK_DB_ID" }`
-- `properties`: 将 fields 映射到 Notion property 格式
+调用 notion-tool 的 `create-page` 命令：
+
+```bash
+uv run tools/notion_tool.py create-page '{
+  "parent": { "type": "database_id", "database_id": "NOTION_TASK_DB_ID" },
+  "properties": <Notion property 格式>
+}'
+```
 
 **Notion property 格式示例：**
 ```json
@@ -67,35 +97,68 @@ BOARD_BACKEND=notion
   "Estimate": { "number": 4 },
   "Description": { "rich_text": [{ "text": { "content": "详细描述" } }] },
   "GitLab Issue": { "url": "http://gitlab.internal/..." },
-  "GitLab MR": { "url": "http://gitlab.internal/..." },
   "Due Date": { "date": { "start": "2026-05-25" } },
   "Notes": { "rich_text": [{ "text": { "content": "站会备注" } }] }
 }
 ```
 
+**Status 字段有效值：**
+- `Draft` — 草稿，用户在 Notion 表格中快速录入的未处理条目
+- `Backlog` — 已确认的待办任务
+- `Sprint Todo` — 已分配到 Sprint 的待开始任务
+- `In Progress` — 进行中
+- `In Review` — 审核中
+- `Done` — 已完成
+
 ---
 
 ### update_task(id, fields) / move_task(id, status)
 
-调用 Notion MCP 的 `update_page` 工具：
-- `page_id`: 任务的 Notion page ID
-- `properties`: 只包含需要更新的字段（格式同 create_task）
+调用 notion-tool 的 `update-page` 命令：
+
+```bash
+uv run tools/notion_tool.py update-page '{
+  "page_id": "<任务的 Notion page ID>",
+  "properties": <只包含需要更新的字段，格式同 create_task>
+}'
+```
 
 ---
 
 ### list_sprints()
 
-调用 `query_database`，获取 `Sprint` 字段的所有唯一值：
-- 使用 Notion MCP 的 `retrieve_database` 获取 Sprint select 选项列表
-- 已归档的 Sprint 名称包含 `-archived` 后缀
+调用 notion-tool 的 `retrieve-database` 获取 Sprint select 选项列表：
+
+```bash
+uv run tools/notion_tool.py retrieve-database '{
+  "database_id": "NOTION_TASK_DB_ID"
+}'
+```
+
+从返回的 `properties.Sprint.select.options` 中提取 Sprint 列表。已归档的 Sprint 名称包含 `-archived` 后缀。
 
 ---
 
 ### create_sprint(name, dates)
 
 Sprint 在 Notion 中表现为 Task Database 的 `Sprint` select 选项。
-- 调用 `update_database` 向 Sprint 属性添加新的 select 选项（`name` 即 Sprint 名称）
-- Sprint 的起止日期记录在 Dashboard Page 的 Sprint 概览模块中
+
+调用 notion-tool 的 `update-database` 向 Sprint 属性添加新的 select 选项：
+
+```bash
+uv run tools/notion_tool.py update-database '{
+  "database_id": "NOTION_TASK_DB_ID",
+  "properties": {
+    "Sprint": {
+      "select": {
+        "options": [<现有选项列表>, { "name": "Sprint-02" }]
+      }
+    }
+  }
+}'
+```
+
+Sprint 的起止日期记录在 `~/.claude/agile-pm/config.json` 的 `current_sprint` 字段和 Dashboard Page 的 Sprint 概览模块中。
 
 ---
 
@@ -116,7 +179,34 @@ Sprint 在 Notion 中表现为 Task Database 的 `Sprint` select 选项。
 
 ### update_dashboard(sections) / get_dashboard()
 
-Dashboard 是一个 Notion Page，使用 `append_block_children` 和 `delete_block` 更新内容。
+Dashboard 是一个 Notion Page，使用 notion-tool 的 block 操作更新内容。
+
+**读取 Dashboard：**
+
+```bash
+uv run tools/notion_tool.py list-block-children '{
+  "block_id": "NOTION_DASHBOARD_PAGE_ID"
+}'
+```
+
+**删除旧 block：**
+
+对每个需要删除的 block 调用：
+
+```bash
+uv run tools/notion_tool.py delete-block '{
+  "block_id": "<block_id>"
+}'
+```
+
+**写入新 block：**
+
+```bash
+uv run tools/notion_tool.py append-block-children '{
+  "block_id": "NOTION_DASHBOARD_PAGE_ID",
+  "children": [<block 列表>]
+}'
+```
 
 **页面结构（block 顺序）：**
 1. Heading 1: "📊 项目管理 Dashboard"
